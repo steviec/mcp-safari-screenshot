@@ -104,9 +104,14 @@ This package requires System Events permissions to work:
 1. Open Cursor
 2. Go to settings, "Add MCP Server"
 3. In the configuration dialog:
+
    - Name: `safari-screenshot`
    - Type: `command`
-   - Command: `npx -y @rogerheykoop/mcp-safari-screenshot`
+   - Command: `npx -y @rogerheykoop/mcp-safari-screenshot --server`
+
+   Or for local development:
+
+   - Command: `npx -y /path/to/mcp-safari-screenshot/server.js --server`
 
 ### Example Commands
 
@@ -177,3 +182,23 @@ If you encounter issues:
 ## License
 
 MIT
+
+## Testing Locally
+
+You can test the MCP implementation directly:
+
+```bash
+# Test discovery
+echo '{"type":"discover"}' | npx -y ./server.js
+
+# Test screenshot
+echo '{"type":"execute","tool":"take_screenshot","input":"Take a screenshot of https://apple.com","requestId":"123"}' | npx -y ./server.js
+```
+
+Expected responses:
+
+1. Discover will return capabilities
+2. Execute will:
+   - Log progress to stderr
+   - Return result JSON to stdout
+   - Save screenshot to ./screenshots/
