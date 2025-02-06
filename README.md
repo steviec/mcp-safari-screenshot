@@ -107,11 +107,11 @@ This package requires System Events permissions to work:
 
    - Name: `safari-screenshot`
    - Type: `command`
-   - Command: `npx -y @rogerheykoop/mcp-safari-screenshot --server`
+   - Command: `npx -y @rogerheykoop/mcp-safari-screenshot`
 
    Or for local development:
 
-   - Command: `npx -y /path/to/mcp-safari-screenshot/server.js --server`
+   - Command: `npx -y /path/to/mcp-safari-screenshot/server.js`
 
 ### Example Commands
 

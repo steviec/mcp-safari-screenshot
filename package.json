@@ -1,16 +1,20 @@
 {
     "name": "@rogerheykoop/mcp-safari-screenshot",
-    "version": "1.0.3",
+    "version": "1.0.5",
     "description": "MCP server for capturing screenshots using Safari on macOS",
-    "main": "screenshot.js",
     "type": "module",
     "bin": {
-        "mcp-safari-screenshot": "./server.js"
+        "mcp-safari-screenshot": "dist/index.js"
     },
+    "files": [
+        "dist"
+    ],
     "scripts": {
-        "start": "node server.js --server",
-        "cli": "node server.js",
-        "test": "node test.js"
+        "build": "npx tsc && chmod +x dist/*.js",
+        "start": "node dist/index.js",
+        "dev": "npx tsc -w",
+        "test": "node dist/test.js",
+        "prepare": "npm run build"
     },
     "keywords": [
         "mcp",
@@ -33,12 +37,13 @@
         "url": "https://github.com/rogerheykoop/safari-screenshot/issues"
     },
     "homepage": "https://github.com/rogerheykoop/safari-screenshot#readme",
-    "types": "screenshot.d.ts",
+    "types": "./dist/screenshot.d.ts",
     "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.4.1",
         "chalk": "^5.4.1"
     },
-    "exports": {
-        ".": "./screenshot.js",
-        "./server": "./server.js"
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.7.3"
     }
 }
