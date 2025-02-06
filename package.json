@@ -1,6 +1,6 @@
 {
     "name": "@rogerheykoop/mcp-safari-screenshot",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "description": "MCP server for capturing screenshots using Safari on macOS",
     "main": "screenshot.js",
     "type": "module",

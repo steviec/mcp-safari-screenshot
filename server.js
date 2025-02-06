@@ -20,34 +20,40 @@ const VIEWPORT_SIZES = {
 const server = {
     name: 'safari-screenshot',
     description: 'Take screenshots using Safari on macOS',
-    version: '1.0.0',
-    tools: [
-        {
-            name: 'screenshot',
-            description: 'Take a screenshot of a webpage',
-            execute: async (input) => {
-                try {
-                    const options = parseInput(input);
-                    console.log(chalk.blue('📸 Taking screenshot...'));
-                    console.log(chalk.gray(`URL: ${options.url}`));
-                    console.log(chalk.gray(`Size: ${options.width}×${options.height}`));
-                    console.log(chalk.gray(`Zoom: ${options.zoomLevel * 100}%`));
-                    
-                    const result = await takeScreenshot(options);
-                    console.log(chalk.green('✅ Screenshot saved to:', result.path));
-                    
-                    return {
-                        success: true,
-                        path: result.path,
-                        message: `Screenshot saved to ${result.path}`
-                    };
-                } catch (error) {
-                    console.error(chalk.red('❌ Error:', error.message));
-                    throw error;
+    version: '1.0.2',
+    capabilities: {
+        tools: [
+            {
+                name: 'take_screenshot',
+                description: 'Take a screenshot of a webpage',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        url: {
+                            type: 'string',
+                            description: 'URL to capture'
+                        },
+                        device: {
+                            type: 'string',
+                            description: 'Device preset (desktop, laptop, mobile, etc)',
+                            optional: true
+                        },
+                        zoom: {
+                            type: 'number',
+                            description: 'Zoom level (1 = 100%)',
+                            optional: true
+                        },
+                        wait: {
+                            type: 'number',
+                            description: 'Seconds to wait for page load',
+                            optional: true
+                        }
+                    },
+                    required: ['url']
                 }
             }
-        }
-    ]
+        ]
+    }
 };
 
 // Parse natural language input for device and settings
@@ -87,6 +93,29 @@ function parseInput(input) {
     return options;
 }
 
+// Handle tool execution
+async function executeCommand(command) {
+    try {
+        const options = parseInput(command);
+        console.log(chalk.blue('📸 Taking screenshot...'));
+        console.log(chalk.gray(`URL: ${options.url}`));
+        console.log(chalk.gray(`Size: ${options.width}×${options.height}`));
+        console.log(chalk.gray(`Zoom: ${options.zoomLevel * 100}%`));
+        
+        const result = await takeScreenshot(options);
+        console.log(chalk.green('✅ Screenshot saved to:', result.path));
+        
+        return {
+            success: true,
+            path: result.path,
+            message: `Screenshot saved to ${result.path}`
+        };
+    } catch (error) {
+        console.error(chalk.red('❌ Error:', error.message));
+        throw error;
+    }
+}
+
 // Create TCP server for MCP
 const tcpServer = net.createServer((socket) => {
     socket.on('data', async (data) => {
@@ -97,32 +126,25 @@ const tcpServer = net.createServer((socket) => {
                 // Respond with server capabilities
                 socket.write(JSON.stringify({
                     type: 'capabilities',
-                    server: server.name,
-                    version: server.version,
-                    description: server.description,
-                    tools: server.tools.map(tool => ({
-                        name: tool.name,
-                        description: tool.description
-                    }))
+                    ...server
                 }));
             } else if (message.type === 'execute') {
-                // Execute tool and return result
-                const tool = server.tools.find(t => t.name === message.tool);
-                if (!tool) {
-                    throw new Error(`Tool ${message.tool} not found`);
+                if (message.tool === 'take_screenshot') {
+                    const result = await executeCommand(message.input);
+                    socket.write(JSON.stringify({
+                        type: 'result',
+                        requestId: message.requestId,
+                        success: true,
+                        result
+                    }));
+                } else {
+                    throw new Error(`Unknown tool: ${message.tool}`);
                 }
-                
-                const result = await tool.execute(message.input);
-                socket.write(JSON.stringify({
-                    type: 'result',
-                    requestId: message.requestId,
-                    success: true,
-                    result
-                }));
             }
         } catch (error) {
             socket.write(JSON.stringify({
                 type: 'error',
+                requestId: message?.requestId,
                 message: error.message
             }));
         }
@@ -145,7 +167,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         process.stdin.setEncoding('utf8');
         process.stdin.on('data', async (input) => {
             try {
-                await server.tools[0].execute(input.trim());
+                await executeCommand(input.trim());
             } catch (error) {
                 // Error already logged
             }
