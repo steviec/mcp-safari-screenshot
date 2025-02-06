@@ -2,7 +2,7 @@
     "name": "@rogerheykoop/mcp-safari-screenshot",
     "version": "1.0.0",
     "description": "MCP server for capturing screenshots using Safari on macOS",
-    "main": "server.js",
+    "main": "screenshot.js",
     "type": "module",
     "bin": {
         "mcp-safari-screenshot": "./server.js"
@@ -34,8 +34,10 @@
     "homepage": "https://github.com/rogerheykoop/safari-screenshot#readme",
     "types": "screenshot.d.ts",
     "dependencies": {
-        "@mcp/protocol": "^0.1.0",
-        "@mcp/core": "^0.1.0",
         "chalk": "^5.4.1"
+    },
+    "exports": {
+        ".": "./screenshot.js",
+        "./server": "./server.js"
     }
 }

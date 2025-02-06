@@ -1,6 +1,5 @@
-node_modules/
-.DS_Store
 test-screenshots/
+.git/
+.gitignore
 temp.scpt
-.npm
 *.log 

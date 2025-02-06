@@ -1,72 +1,84 @@
-import { createServer } from '@mcp/protocol';
+#!/usr/bin/env node
+
 import { takeScreenshot } from './screenshot.js';
 import chalk from 'chalk';
 
-const server = createServer({
-  name: 'safari-screenshot',
-  version: '1.0.0',
-  description: 'MCP server for taking screenshots using Safari via Puppeteer',
-  
-  // Define the capabilities of this server
-  capabilities: {
-    tools: [{
-      name: 'take_screenshot',
-      description: 'Take a screenshot of a webpage using Safari',
-      parameters: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description: 'URL to take screenshot of'
-          },
-          outputPath: {
-            type: 'string',
-            description: 'Path to save the screenshot',
-            default: './screenshot.png'
-          },
-          fullPage: {
-            type: 'boolean',
-            description: 'Whether to take a full page screenshot',
-            default: false
-          },
-          selector: {
-            type: 'string',
-            description: 'CSS selector for specific element screenshot',
-            optional: true
-          }
-        },
-        required: ['url']
-      }
-    }]
-  }
-});
+// Common viewport sizes
+const VIEWPORT_SIZES = {
+    'desktop': { width: 1920, height: 1080 },
+    'laptop': { width: 1366, height: 768 },
+    'tablet-landscape': { width: 1024, height: 768 },
+    'tablet-portrait': { width: 768, height: 1024 },
+    'mobile-large': { width: 428, height: 926 },
+    'mobile-medium': { width: 390, height: 844 },
+    'mobile-small': { width: 375, height: 667 }
+};
 
-// Register the screenshot tool
-server.registerTool('take_screenshot', async (params, context) => {
-  try {
-    console.log(chalk.blue('📸 Taking screenshot...'));
-    const result = await takeScreenshot({
-      url: params.url,
-      outputPath: params.outputPath || './screenshot.png',
-      fullPage: params.fullPage || false,
-      selector: params.selector
-    });
-    
-    console.log(chalk.green('✅ Screenshot saved to: ' + params.outputPath));
-    
-    return {
-      success: true,
-      outputPath: params.outputPath,
-      message: `Screenshot saved to ${params.outputPath}`
+// Parse natural language input for device and settings
+function parseInput(input) {
+    const url = input.match(/https?:\/\/[^\s]+/)?.[0];
+    if (!url) throw new Error('No URL found in input');
+
+    const options = {
+        url,
+        outputPath: `./screenshots/${new URL(url).hostname}-${Date.now()}.png`,
+        width: 1024,
+        height: 768,
+        waitTime: 3,
+        zoomLevel: 1
     };
-  } catch (error) {
-    console.error(chalk.red('❌ Error:'), error.message);
-    throw error;
-  }
+
+    // Check for device names
+    Object.entries(VIEWPORT_SIZES).forEach(([device, size]) => {
+        if (input.toLowerCase().includes(device)) {
+            options.width = size.width;
+            options.height = size.height;
+        }
+    });
+
+    // Check for zoom level
+    const zoomMatch = input.match(/(\d+)%\s*zoom/);
+    if (zoomMatch) {
+        options.zoomLevel = parseInt(zoomMatch[1]) / 100;
+    }
+
+    // Check for wait time
+    const waitMatch = input.match(/wait\s*(\d+)\s*seconds?/);
+    if (waitMatch) {
+        options.waitTime = parseInt(waitMatch[1]);
+    }
+
+    return options;
+}
+
+// Handle input
+async function handleInput(input) {
+    try {
+        const options = parseInput(input);
+        console.log(chalk.blue('📸 Taking screenshot...'));
+        console.log(chalk.gray(`URL: ${options.url}`));
+        console.log(chalk.gray(`Size: ${options.width}×${options.height}`));
+        console.log(chalk.gray(`Zoom: ${options.zoomLevel * 100}%`));
+        
+        const result = await takeScreenshot(options);
+        console.log(chalk.green('✅ Screenshot saved to:', result.path));
+        
+        return result;
+    } catch (error) {
+        console.error(chalk.red('❌ Error:', error.message));
+        throw error;
+    }
+}
+
+// Read from stdin
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', async (input) => {
+    try {
+        await handleInput(input.trim());
+    } catch (error) {
+        // Error already logged
+    }
 });
 
-// Start the server
-const port = process.env.PORT || 3000;
-server.listen(port, () => {
-  console.log(chalk.green(`🚀 MCP Safari Screenshot server running on port ${port}`));
-}); 
+console.log(chalk.green('🚀 Safari Screenshot server ready'));
+console.log(chalk.gray('Enter a command like: "Take a screenshot of https://example.com"')); 
