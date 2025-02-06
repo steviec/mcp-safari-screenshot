@@ -60,14 +60,14 @@ npm install safari-screenshot
 
 ## Options
 
-| Option     | Type   | Default  | Description                   |
-| ---------- | ------ | -------- | ----------------------------- |
-| url        | string | required | The URL to capture            |
-| outputPath | string | required | Where to save the screenshot  |
-| width      | number | 1024     | Window width in pixels        |
-| height     | number | 768      | Window height in pixels       |
-| waitTime   | number | 3        | Seconds to wait for page load |
-| zoomLevel  | number | 1        | Page zoom level (1 = 100%)    |
+| Option     | Type   | Default  | Description                                                                      |
+| ---------- | ------ | -------- | -------------------------------------------------------------------------------- |
+| url        | string | required | The URL to capture                                                               |
+| outputPath | string | auto     | Where to save the screenshot (default: ./screenshots/[hostname]-[timestamp].png) |
+| width      | number | 1024     | Window width in pixels                                                           |
+| height     | number | 768      | Window height in pixels                                                          |
+| waitTime   | number | 3        | Seconds to wait for page load                                                    |
+| zoomLevel  | number | 1        | Page zoom level (1 = 100%)                                                       |
 
 ## Common Viewport Sizes
 

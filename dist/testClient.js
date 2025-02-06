@@ -13,7 +13,15 @@ child.stderr.on('data', (data) => {
 // Here's a minimal example for the "take_screenshot" method:
 const request = JSON.stringify({
     method: 'take_screenshot',
-    input: 'https://example.com?desktop',
+    params: {
+        name: 'take_screenshot',
+        arguments: {
+            url: 'https://example.com',
+            outputPath: './custom-screenshots/example.png',
+            width: 1920,
+            height: 1080,
+        },
+    },
 });
 // Write the request to the server's stdin
 child.stdin.write(request + '\n');

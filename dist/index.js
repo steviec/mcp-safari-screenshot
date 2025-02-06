@@ -28,6 +28,11 @@ const SCREENSHOT_TOOL = {
                 type: 'string',
                 description: 'URL to capture',
             },
+            outputPath: {
+                type: 'string',
+                description: 'Path where the screenshot will be saved (default: ./screenshots/[hostname]-[timestamp].png)',
+                default: '',
+            },
             width: {
                 type: 'number',
                 description: 'Window width in pixels (default: 1024)',
@@ -55,7 +60,7 @@ const SCREENSHOT_TOOL = {
 // Server implementation
 const server = new Server({
     name: 'safari-screenshot',
-    version: '1.0.5',
+    version: '1.0.6',
     description: 'Take screenshots using Safari on macOS',
 }, {
     capabilities: {
@@ -79,7 +84,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!isScreenshotArgs(args)) {
                     throw new Error('Invalid arguments for take_screenshot');
                 }
-                const outputPath = `./screenshots/${new URL(args.url).hostname}-${Date.now()}.png`;
+                const outputPath = args.outputPath || `./screenshots/${new URL(args.url).hostname}-${Date.now()}.png`;
                 const result = await takeScreenshot({
                     url: args.url,
                     outputPath,
