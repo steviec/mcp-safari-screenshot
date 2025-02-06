@@ -3,7 +3,6 @@
 import { takeScreenshot } from './screenshot.js';
 import chalk from 'chalk';
 import { fileURLToPath } from 'url';
-import net from 'net';
 
 // Common viewport sizes
 const VIEWPORT_SIZES = {
@@ -97,13 +96,13 @@ function parseInput(input) {
 async function executeCommand(command) {
     try {
         const options = parseInput(command);
-        console.log(chalk.blue('📸 Taking screenshot...'));
-        console.log(chalk.gray(`URL: ${options.url}`));
-        console.log(chalk.gray(`Size: ${options.width}×${options.height}`));
-        console.log(chalk.gray(`Zoom: ${options.zoomLevel * 100}%`));
+        console.error(chalk.blue('📸 Taking screenshot...'));
+        console.error(chalk.gray(`URL: ${options.url}`));
+        console.error(chalk.gray(`Size: ${options.width}×${options.height}`));
+        console.error(chalk.gray(`Zoom: ${options.zoomLevel * 100}%`));
         
         const result = await takeScreenshot(options);
-        console.log(chalk.green('✅ Screenshot saved to:', result.path));
+        console.error(chalk.green('✅ Screenshot saved to:', result.path));
         
         return {
             success: true,
@@ -116,63 +115,61 @@ async function executeCommand(command) {
     }
 }
 
-// Create TCP server for MCP
-const tcpServer = net.createServer((socket) => {
-    socket.on('data', async (data) => {
-        try {
-            const message = JSON.parse(data.toString());
-            
-            if (message.type === 'discover') {
-                // Respond with server capabilities
-                socket.write(JSON.stringify({
-                    type: 'capabilities',
-                    ...server
-                }));
-            } else if (message.type === 'execute') {
-                if (message.tool === 'take_screenshot') {
-                    const result = await executeCommand(message.input);
-                    socket.write(JSON.stringify({
-                        type: 'result',
-                        requestId: message.requestId,
-                        success: true,
-                        result
-                    }));
-                } else {
-                    throw new Error(`Unknown tool: ${message.tool}`);
-                }
-            }
-        } catch (error) {
-            socket.write(JSON.stringify({
-                type: 'error',
-                requestId: message?.requestId,
-                message: error.message
+// Handle MCP messages via stdin/stdout
+async function handleMCPMessage(message) {
+    try {
+        if (message.type === 'discover') {
+            // Respond with capabilities
+            console.log(JSON.stringify({
+                type: 'capabilities',
+                ...server
             }));
-        }
-    });
-});
-
-// Start server or CLI based on how we're run
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    if (process.argv.includes('--server')) {
-        // Start MCP server mode
-        const port = process.env.PORT || 3000;
-        tcpServer.listen(port, () => {
-            console.log(chalk.green(`🚀 Safari Screenshot MCP server running on port ${port}`));
-        });
-    } else {
-        // Start CLI mode
-        console.log(chalk.green('🚀 Safari Screenshot CLI ready'));
-        console.log(chalk.gray('Enter a command like: "Take a screenshot of https://example.com"'));
-
-        process.stdin.setEncoding('utf8');
-        process.stdin.on('data', async (input) => {
-            try {
-                await executeCommand(input.trim());
-            } catch (error) {
-                // Error already logged
+        } else if (message.type === 'execute') {
+            if (message.tool === 'take_screenshot') {
+                const result = await executeCommand(message.input);
+                console.log(JSON.stringify({
+                    type: 'result',
+                    requestId: message.requestId,
+                    success: true,
+                    result
+                }));
+            } else {
+                throw new Error(`Unknown tool: ${message.tool}`);
             }
-        });
+        }
+    } catch (error) {
+        console.log(JSON.stringify({
+            type: 'error',
+            requestId: message?.requestId,
+            message: error.message
+        }));
     }
 }
+
+// Read from stdin
+process.stdin.setEncoding('utf8');
+let inputBuffer = '';
+
+process.stdin.on('data', (chunk) => {
+    inputBuffer += chunk;
+    
+    // Process complete JSON messages
+    const messages = inputBuffer.split('\n');
+    inputBuffer = messages.pop(); // Keep the last incomplete chunk
+    
+    for (const message of messages) {
+        if (message.trim()) {
+            try {
+                const parsed = JSON.parse(message);
+                handleMCPMessage(parsed);
+            } catch (error) {
+                console.error(chalk.red('Failed to parse message:', error.message));
+            }
+        }
+    }
+});
+
+// Log startup to stderr (not stdout, which is for MCP messages)
+console.error(chalk.green('🚀 Safari Screenshot MCP ready'));
 
 export default server; 
