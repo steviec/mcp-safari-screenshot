@@ -1,0 +1,34 @@
+{
+    "name": "safari-screenshot",
+    "version": "1.0.0",
+    "description": "Capture screenshots using Safari on macOS",
+    "main": "screenshot.js",
+    "type": "module",
+    "scripts": {
+        "test": "node test.js"
+    },
+    "keywords": [
+        "safari",
+        "screenshot",
+        "macos",
+        "capture",
+        "automation"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rogerheykoop/safari-screenshot.git"
+    },
+    "bugs": {
+        "url": "https://github.com/rogerheykoop/safari-screenshot/issues"
+    },
+    "homepage": "https://github.com/rogerheykoop/safari-screenshot#readme",
+    "types": "screenshot.d.ts",
+    "dependencies": {
+        "chalk": "^5.4.1"
+    }
+}
