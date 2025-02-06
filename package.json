@@ -8,7 +8,8 @@
         "mcp-safari-screenshot": "./server.js"
     },
     "scripts": {
-        "start": "node server.js",
+        "start": "node server.js --server",
+        "cli": "node server.js",
         "test": "node test.js"
     },
     "keywords": [
