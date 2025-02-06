@@ -19,7 +19,7 @@ const VIEWPORT_SIZES = {
 const server = {
     name: 'safari-screenshot',
     description: 'Take screenshots using Safari on macOS',
-    version: '1.0.2',
+    version: '1.0.3',
     capabilities: {
         tools: [
             {
