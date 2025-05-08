@@ -8,24 +8,27 @@ const execAsync = promisify(exec);
 
 export interface ScreenshotOptions {
 	url: string;
-	outputPath: string;
+	outputPath?: string;
 	width?: number;
 	height?: number;
 	waitTime?: number;
 	zoomLevel?: number;
+	returnFormat?: 'binary' | 'dataURI' | 'file';
 }
 
 export interface ScreenshotResult {
 	success: boolean;
-	path: string;
+	path?: string;
+	binaryData?: Buffer;
+	dataURI?: string;
 }
 
 export async function takeScreenshot(options: ScreenshotOptions): Promise<ScreenshotResult> {
-	const { url, outputPath, width = 1024, height = 768, waitTime = 3, zoomLevel = 1 } = options;
+	const { url, outputPath, width = 1024, height = 768, waitTime = 3, zoomLevel = 1, returnFormat = 'file' } = options;
 
 	try {
 		// Create screenshots directory if it doesn't exist
-		const dir = path.dirname(outputPath);
+		const dir = path.dirname(outputPath || './screenshots/temp.png');
 		await fs.mkdir(dir, { recursive: true });
 
 		// Open URL in Safari
@@ -39,7 +42,7 @@ export async function takeScreenshot(options: ScreenshotOptions): Promise<Screen
 			'screencapture',
 			'-x', // Disable interactive mode
 			width && height ? `-R 0,0,${width},${height}` : '', // Set window size
-			outputPath,
+			outputPath || './screenshots/temp.png',
 		]
 			.filter(Boolean)
 			.join(' ');
@@ -47,14 +50,30 @@ export async function takeScreenshot(options: ScreenshotOptions): Promise<Screen
 		await execAsync(command);
 
 		// Verify screenshot was created
-		const stats = await fs.stat(outputPath);
+		const screenshotPath = outputPath || './screenshots/temp.png';
+		const stats = await fs.stat(screenshotPath);
 		if (stats.size < 1000) {
 			throw new Error('Screenshot appears to be empty or too small');
 		}
 
+		if (returnFormat === 'binary') {
+			const binaryData = await fs.readFile(screenshotPath);
+			return {
+				success: true,
+				binaryData,
+			};
+		} else if (returnFormat === 'dataURI') {
+			const binaryData = await fs.readFile(screenshotPath);
+			const dataURI = `data:image/png;base64,${binaryData.toString('base64')}`;
+			return {
+				success: true,
+				dataURI,
+			};
+		}
+
 		return {
 			success: true,
-			path: outputPath,
+			path: screenshotPath,
 		};
 	} catch (error) {
 		throw error instanceof Error ? error : new Error(String(error));
