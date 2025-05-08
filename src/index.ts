@@ -35,6 +35,7 @@ interface ScreenshotArgs {
 	height?: number;
 	waitTime?: number;
 	zoomLevel?: number;
+	returnFormat?: 'binary' | 'base64' | 'file';
 }
 
 // Type guard for screenshot arguments
@@ -77,6 +78,11 @@ const SCREENSHOT_TOOL: Tool = {
 				type: 'number',
 				description: 'Zoom level (1 = 100%, 0.5 = 50%, 2 = 200%)',
 				default: 1,
+			},
+			returnFormat: {
+				type: 'string',
+				description: 'Return format of the screenshot (binary, base64, file)',
+				default: 'file',
 			},
 		},
 		required: ['url'],
@@ -125,7 +131,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 					height: args.height,
 					waitTime: args.waitTime,
 					zoomLevel: args.zoomLevel,
+					returnFormat: args.returnFormat,
 				});
+				if (args.returnFormat === 'binary' && result.binaryData) {
+					return {
+						content: [
+							{
+								type: 'image',
+								data: result.binaryData,
+								mimeType: 'image/png',
+							},
+						],
+						isError: false,
+					};
+				} else if (args.returnFormat === 'base64' && result.base64Data) {
+					return {
+						content: [
+							{
+								type: 'text',
+								text: result.base64Data,
+							},
+						],
+						isError: false,
+					};
+				}
 				return {
 					content: [
 						{

@@ -23,6 +23,7 @@ await takeScreenshot({
 	height: 768, // Optional: window height (default: 768)
 	waitTime: 3, // Optional: seconds to wait for load (default: 3)
 	zoomLevel: 1, // Optional: page zoom level (default: 1)
+	returnFormat: 'file', // Optional: return format (binary, base64, file) (default: file)
 });
 
 // Responsive design testing
@@ -32,6 +33,7 @@ await takeScreenshot({
 	width: 375, // iPhone SE width
 	height: 667, // iPhone SE height
 	zoomLevel: 1,
+	returnFormat: 'file', // Optional: return format (binary, base64, file) (default: file)
 });
 
 // High-resolution capture
@@ -42,6 +44,7 @@ await takeScreenshot({
 	height: 1080, // Full HD height
 	waitTime: 5, // Wait longer for HD content
 	zoomLevel: 0.8, // Zoom out slightly
+	returnFormat: 'file', // Optional: return format (binary, base64, file) (default: file)
 });
 ```
 
@@ -60,14 +63,15 @@ npm install safari-screenshot
 
 ## Options
 
-| Option     | Type   | Default  | Description                                                                      |
-| ---------- | ------ | -------- | -------------------------------------------------------------------------------- |
-| url        | string | required | The URL to capture                                                               |
-| outputPath | string | auto     | Where to save the screenshot (default: ./screenshots/[hostname]-[timestamp].png) |
-| width      | number | 1024     | Window width in pixels                                                           |
-| height     | number | 768      | Window height in pixels                                                          |
-| waitTime   | number | 3        | Seconds to wait for page load                                                    |
-| zoomLevel  | number | 1        | Page zoom level (1 = 100%)                                                       |
+| Option       | Type   | Default  | Description                                                                      |
+| ------------ | ------ | -------- | -------------------------------------------------------------------------------- |
+| url          | string | required | The URL to capture                                                               |
+| outputPath   | string | auto     | Where to save the screenshot (default: ./screenshots/[hostname]-[timestamp].png) |
+| width        | number | 1024     | Window width in pixels                                                           |
+| height       | number | 768      | Window height in pixels                                                          |
+| waitTime     | number | 3        | Seconds to wait for page load                                                    |
+| zoomLevel    | number | 1        | Page zoom level (1 = 100%)                                                       |
+| returnFormat | string | file     | Return format of the screenshot (binary, base64, file)                           |
 
 ## Common Viewport Sizes
 
@@ -202,3 +206,41 @@ Expected responses:
    - Log progress to stderr
    - Return result JSON to stdout
    - Save screenshot to ./screenshots/
+
+## New Feature: Return Binary Data
+
+The `takeScreenshot` function now supports returning the screenshot as binary data or base64-encoded data URI instead of saving it to disk. This is useful for scenarios where you need to process the image directly in memory.
+
+### Usage Example
+
+```javascript
+import { takeScreenshot } from './screenshot.js';
+
+// Return binary data
+const resultBinary = await takeScreenshot({
+	url: 'https://www.apple.com',
+	returnFormat: 'binary',
+});
+
+if (resultBinary.binaryData) {
+	// Process the binary data
+	console.log('Screenshot binary data:', resultBinary.binaryData);
+}
+
+// Return base64-encoded data URI
+const resultBase64 = await takeScreenshot({
+	url: 'https://www.apple.com',
+	returnFormat: 'base64',
+});
+
+if (resultBase64.base64Data) {
+	// Process the base64-encoded data URI
+	console.log('Screenshot base64 data:', resultBase64.base64Data);
+}
+```
+
+### Options
+
+| Option       | Type   | Default  | Description                                                                      |
+| ------------ | ------ | -------- | -------------------------------------------------------------------------------- |
+| returnFormat | string | file     | Return format of the screenshot (binary, base64, file)                           |
